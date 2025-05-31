@@ -9,19 +9,15 @@ Date: 2025/03/16
 
 Tools Used: Python
 
-This project focuses on analyzing payment and transaction data of an E-wallet company. I practiced with Data Wranglling and EDA to answer some questions for this project.
-
-# : Data Wraling and EDA 
-
 ---
 # 📑 Table of Contents
 
-📌 Background & Overview
-
-📂 Dataset Description & Data Structure
-
-🔎 Use Cases
-
+1. [📌 Background & Overview](#-background--overview)  
+2. [📂 Dataset Data Structure](#-data-structure)  
+3. [🌈 Main Process](#-main-process)
+4. [✅ Conclusions](#-conclusions)  
+5. [💡 Key Takeaways from This Project](#-key-takeaways-from-this-project)
+   
 ---
 
 # 📌 Background & Overview
@@ -127,6 +123,7 @@ print(product.head())
 
 These steps ensured that the data was properly loaded and ready for further exploration and analysis.
 
+---
 
 ## PART 2: EXPLORATORY DATA ANALYSIS 
 
@@ -218,10 +215,11 @@ If the analysis does not require customer profiling (e.g., sender behavior), the
 - `sender_id` and `receiver_id` are in **float64**. → These should be converted to **integers**.
 
 --- 
-# DATA WRANGLING 
+# PART 3: DATA WRANGLING 
 
 ### TASK 1: 
-Using `payment_report.csv` & `product.csv`
+
+*Using `payment_report.csv` & `product.csv`*
 
 📌 **Requirement:** What are the three top-performing products in terms of payment volume?
 
@@ -247,11 +245,12 @@ This line of code groups **the payment_enriched dataset** by `product_id`, **cal
 
 - The **large gap between the first and the other** two products (ID 429 and 372) suggests that product 1976 plays a significant role in revenue generation and should be prioritized in sales strategy, inventory planning, and promotional campaigns.
 
-- These **top-performing products **might reflect customer preferences, seasonal demand, or specific promotions. Further analysis could help understand what drives the success of these products, such as category, price, or customer segment.
+- These **top-performing products** might reflect customer preferences, seasonal demand, or specific promotions. Further analysis could help understand what drives the success of these products, such as category, price, or customer segment.
 
 ---
 ### TASK 2: 
-Using `payment_report.csv` & `product.csv`
+
+*Using `payment_report.csv` & `product.csv`*
 
 📌 **Requirement:** Given that 1 product_id is only owed by 1 team. Are there any abnormal products violating the "one product is owned by one team" rule?
 
@@ -271,9 +270,6 @@ If a product is owned by more than one team, it violates the business rule.
 
 The code filters those violations (product_team_count > 1) and then sums them to get the total count of abnormal products.
 
-
-🖼 **Results Snapshot:**
-0
 **📊 Observation:**
 
 There are **no violations:** Each product is owned by exactly one team, which complies with the business rule.
@@ -282,63 +278,196 @@ This consistency ensures clear ownership, better accountability, and avoids conf
 
 It also simplifies further analysis like performance by team, product allocation, or internal audits.
 
-# Conclusions 
+---
 
-**Enhanced Data Analysis Skills:**
+### TASK 3: 
 
-***Mastered Exploratory Data Analysis (EDA):***
+*Using `payment_report.csv` & `product.csv`*
 
-- Assessed data quality (checked for missing values, duplicates).
+📌 **Requirement:** Which team has the lowest performance in terms of payment volume, and which category contributes the least to this team?
 
-- Summarized key statistics (min, max, mean values).
+📝**Python Code:**
+```python
+#Chọn các đơn hàng từ Quý 2 năm 2023 (Tháng 4 năm 2023)
+payment_q2_2023 = payment_enriched[payment_enriched['report_month']>='2023-04']
+#Tìm team có lowest performance
+team_lowest_performance = payment_enriched.groupby('team_own')['volume'].sum().sort_values(ascending=True).head(1)
 
-- Visualized data to easily identify trends and patterns.
+print(team_lowest_performance)
+```
+```python
+#Tìm category đóng góp ít nhất trong team đó
+category_lowest_performance = payment_q2_2023[payment_q2_2023['team_own']=='APS'].groupby('category')['volume'].sum().sort_values(ascending=True).head(1)
+print(team_lowest_performance)
+print(category_lowest_performance)
+```
+📋**Code Explanation:**
 
-***Practiced Data Wrangling (Data Cleaning and Transformation):***
+- **Filter Q2/2023** data: filter from report_month ≥ 2023-04.
 
-- Merged data from multiple sources (payment_report.csv and product.csv).
+- **Calculate total volume** by team: group by team_own and then calculate total volume to determine the lowest team.
 
-- Identified the top 3 products with the highest payment volume.
+- Filter data by weak team: select data belonging to only the weakest team to continue analyzing.
 
-- Detected anomalies in product ownership (one product owned by one team).
+- Calculate total volume by category: group by category in the weak team, find the category with the lowest total volume.
+  
+🖼 **Results Snapshot:**
+<img width="1077" alt="image" src="https://github.com/user-attachments/assets/21c15cb8-25d3-4b35-b247-cab29bb8ee06" />
 
-- Determined the lowest-performing team and the least contributing category.
+**📊 Observation:**
 
-- Analyzed the distribution of refund transactions and identified the top source.
+**APS is the team with the lowest total payment volume** since April 2023 with **272.9 million.**
 
-- Classified and analyzed different types of transactions in the system.
+Within the APS team, **the PXXXXXE category** contributed the least, reaching only 25.2 million.
 
-**Valuable Business Insights:**
+🔎 Businesses can review the performance of the APS team and re-evaluate the PXXXXXE product portfolio (for example, adjust sales and marketing strategies or discontinue if necessary). This is a starting point for optimizing operational efficiency and product portfolio.
 
-Product Performance Analysis: Identified the top 3 products with the highest payment volume.
+---
+### TASK 4: 
 
-Anomaly Detection: Detected products that violated the "one product is owned by one team" rule.
+*Using `payment_report.csv` & `product.csv`*
 
-Team Performance: Identified the lowest-performing team since Q2.2023 and the least contributing product category.
+📌 **Requirement:**  What is the distribution of refund transactions, and which source contributes the most?
 
-Refund Analysis: Assessed the distribution of refund transactions and identified the top-contributing source.
+📝**Python Code:**
+```python
+#Câu 4: Find the contribution of source_ids of refund transactions (payment_group = ‘refund’), what is the source_id with the highest contribution?
+refund_contribution= payment_enriched[payment_enriched['payment_group']=='refund'].groupby('source_id')['volume'].sum()
+top_highest_refund_contribution= refund_contribution.idxmax()
+print(top_highest_refund_contribution)
+```
+📋**Code Explanation:**
 
-Transaction Classification: Categorized transactions into various types (Transfer, Top-up, Payment, etc.) and analyzed their volume, senders, and receivers.
+- Filter refund data: only keep transactions with payment_group as 'refund'.
 
-**Improved Python Programming Skills:**
+- Group by source_id: calculate total refund volume for each source.
 
-Mastered data manipulation with Pandas (merging, grouping, handling missing values).
+- Determine the largest source: use .idxmax() to find the source_id with the highest volume.
+  
+🖼 **Results Snapshot:**
+<img width="1079" alt="image" src="https://github.com/user-attachments/assets/90ee8574-48f6-4fca-ab08-cee0d4ae0c07" />
 
-Utilized conditional functions (np.where, apply) for efficient transaction classification.
+**📊 Observation:**
+- Source ID 38 is the source with the highest total refund volume.
 
-Learned how to optimize code for large datasets, ensuring efficient data processing.
+- Large refunds from a particular source may be a sign of problems with the payment process, service quality, or customers from this channel have an unusually high rate of refund requests.
 
-# Key Takeaways from This Project:
+- Businesses should review transactions related to source_id 38 to determine the root cause and propose improvements.
+  
+---
+### TASK 5: 
 
-Importance of Data Cleaning: Dirty data leads to misleading analysis. Regularly checking and handling missing, duplicate, and invalid values is crucial.
+*Using `transactions.csv`*
 
-Understanding E-Wallet Operations: Gained insights into how payment and refund transactions work within an E-wallet system.
+📌 **Requirement:**
 
-Advanced Analytical Skills: Defined transaction types clearly and analyzed their various aspects, such as count, volume, senders, and receivers.
+**Define type of transactions (‘transaction_type’) for each row, given:**
 
-Data Visualization Skills: Visualization helps quickly identify trends and anomalies in the data.
+- transType = 2 & merchant_id = 1205: Bank Transfer Transaction
+  
+- transType = 2 & merchant_id = 2260: Withdraw Money Transaction
+  
+- transType = 2 & merchant_id = 2270: Top Up Money Transaction
+  
+- transType = 2 & others merchant_id: Payment Transaction
+  
+- transType = 8, merchant_id = 2250: Transfer Money Transaction
+  
+- transType = 8 & others merchant_id: Split Bill Transaction
+  
+- Remained cases are invalid transactions
+  
+**Of each transaction type (excluding invalid transactions): find the number of transactions, volume, senders and receivers.**
 
-Problem-Solving Mindset: Developed a structured approach, from asking business questions to data processing and presenting clear insights.
+📝**Python Code:**
+
+```python
+#Xác định mỗi loại giao dịch
+def classify_transaction(row):
+  if row['transType'] == 2:
+    if row['merchant_id'] == 1205:
+      return "Bank Transfer Transaction"
+    elif row['merchant_id'] == 2269:
+      return "Withdraw Money Transaction"
+    elif row['merchant_id'] == 2270:
+      return "Top Up Money Transaction"
+    else:
+      return " Payment Transaction"
+  elif row['transType'] == 8:
+    if row['merchant_id'] ==2250:
+      return "Transfer Money Transaction"
+    else:
+      return "Split Bill Transaction"
+  else:
+    return "Invalid Transaction"
+
+# Áp dụng phân loại giao dịch
+transactions["transaction_type"] = transactions.apply(classify_transaction, axis=1)
+```
+```python
+# Of each transaction type (excluding invalid transactions): find the number of transactions, volume, senders and receivers.
+#Loại bỏ giao dịch Invalid
+valid_transactions = transactions[transactions["transaction_type"] != "Invalid Transaction"]
+#Tính số giao dịch, tổng volume, senders và receivers
+transaction_summary= valid_transactions.groupby('transaction_type').agg(
+          transaction_count =('transaction_id','count'),
+          volume = ('volume','sum'),
+          unique_senders = ('sender_id','nunique'),
+          unique_receivers = ('receiver_id','nunique')
+).reset_index()
+
+transaction_summary.head()
+```
+📋**Code Explanation:**
+
+- `classify_transaction()` determines the transaction type based on transType and merchant_id.
+
+- **Transactions that do not match** the above conditions **are considered invalid and are discarded**.
+
+- Data is grouped by valid transaction type to **calculate descriptive metrics**: number of transactions, total volume, number of different senders and receivers
+
+🖼 **Results Snapshot:**
+<img width="772" alt="image" src="https://github.com/user-attachments/assets/0ea3ea1a-d58d-49d4-aea1-6e4ed788dff5" />
+
+**📊 Observation:**
+
+- `Top Up Money Transaction` has the highest total volume (~1.08e+12), indicating that this is a flagship service.
+
+- `Payment Transaction` is the most frequent transaction type with over 432K transactions, reflecting widespread usage.
+
+- `Split Bill Transaction` is the least common transaction type, possibly a side feature or not heavily marketed.
+
+- `Transfer Money and Bank Transfer` also contribute significantly in both volume and users, reflecting high demand for money transfers.
+
+---
+
+#  ✅ Conclusions 
+
+This Python project analyzed a real-world transaction dataset to uncover **key business insights**. The analysis led to the following findings:
+
+- 🔻 Team APS had the lowest performance in Q2 2023, generating a total payment volume of 272.89 million, with the “PXXXXXE” category contributing the least at 25.23 million.
+
+- 🔄 For refund transactions, Source ID 38 contributed the highest refund volume, indicating a need to further investigate potential refund-related issues from this source.
+
+- 🔍 After classifying transactions into distinct types, we found:
+
+	`Payment Transactions` led with 432,402 transactions and a total volume of 952.97 billion, involving 147,670 senders and 124,846 receivers.
+		
+	`Top-Up Transactions` followed with 290,502 transactions and a volume of 1.08 trillion, showing high engagement with 110,409 unique users on both sender and receiver sides.
+
+	In contrast, `Split Bill Transactions` were minimal with just 1,376 transactions and a volume of only 4.9 million, indicating low adoption.
+
+
+---
+# 💡 Key Takeaways from This Project:
+
+- **Importance of Data Cleaning**: Dirty data leads to misleading analysis. Regularly checking and handling missing, duplicate, and invalid values is crucial.
+
+- **Understanding E-Wallet Operations**: Gained insights into how payment and refund transactions work within an E-wallet system.
+
+- **Advanced Analytical Skills**: Defined transaction types clearly and analyzed their various aspects, such as count, volume, senders, and receivers.
+
+- **Problem-Solving Mindset**: Developed a structured approach, from asking business questions to data processing and presenting clear insights.
 
 
 
