@@ -93,7 +93,7 @@ This project focuses on understanding and analyzing payment and transaction data
 ---
 # 🌈 Main Process
 
-## PART 1: DATA PREPERATION
+## PART 1: DATA PREPARATION
 
 The preparation process includes the following steps:
 
